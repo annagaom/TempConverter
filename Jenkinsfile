@@ -6,12 +6,7 @@ pipeline {
         DOCKER_IMAGE_TAG = 'latest'
         PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
-    stages {
-        stage('Check Docker Installation') {
-            steps {
-                sh 'docker --version'
-            }
-        }
+
         stage('Checkout') {
             steps {
                 git 'https://github.com/annagaom/TempConverter.git'
