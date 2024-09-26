@@ -1,40 +1,38 @@
 pipeline {
-    agent any
-    tools {
-        maven 'HomeBrew Maven'  // Ensure Maven is installed
-        jdk 'jdk-20'     // Ensure JDK is installed
+    agent any  // Use "any" to allow Jenkins to pick any available agent
+    environment {
+        DOCKERHUB_CREDENTIALS_ID = 'docker_credentials'
+        DOCKERHUB_REPO = 'annagaom/temp_converter_demo'
+        DOCKER_IMAGE_TAG = 'latest'
+        PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
     stages {
-        stage('Checkout Code') {
+        stage('Check Docker Installation') {
+            steps {
+                sh 'docker --version'
+            }
+        }
+        stage('Checkout') {
             steps {
                 git 'https://github.com/annagaom/TempConverter.git'
             }
         }
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                sh 'mvn clean package'
-            }
-        }
-        stage('Run Unit Tests') {
-            steps {
-                sh 'mvn test'
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/TEST-TemperatureConverterTest.xml'  // Capture test reports
+                script {
+                    docker.build("${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}")
                 }
             }
         }
-        stage('Code Coverage Report') {
+        stage('Push Docker Image to Docker Hub') {
             steps {
-                sh 'mvn jacoco:report'
-            }
-            post {
-                always {
-                    jacoco execPattern: 'target/jacoco.exec'
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS_ID) {
+                        docker.image("${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}").push()
+                    }
                 }
             }
+
         }
     }
 }
-
