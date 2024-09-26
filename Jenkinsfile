@@ -1,17 +1,16 @@
 pipeline {
-    agent any  // Use "any" to allow Jenkins to pick any available agent
+    agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS_ID = 'docker_credentials' // Jenkins credentials ID for Docker Hub
-        DOCKERHUB_REPO = 'annagaom/temp_converter_demo' // Docker Hub repository name
-        DOCKER_IMAGE_TAG = 'latest' // Tag for the Docker image
-        PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin" // Ensure the PATH is set correctly
+        DOCKERHUB_CREDENTIALS_ID = 'docker_credentials'
+        DOCKERHUB_REPO = 'annagaom/temp_converter_demo'
+        DOCKER_IMAGE_TAG = 'latest'
+        PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from the Git repository
                 git 'https://github.com/annagaom/TempConverter.git'
             }
         }
@@ -19,8 +18,23 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image
                     def image = docker.build("${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}")
+                }
+            }
+        }
+
+        stage('List Docker Images') {
+            steps {
+                script {
+                    sh 'docker images'
+                }
+            }
+        }
+
+        stage('Check Docker Version') {
+            steps {
+                script {
+                    sh 'docker --version'
                 }
             }
         }
@@ -28,10 +42,8 @@ pipeline {
         stage('Push Docker Image to Docker Hub') {
             steps {
                 script {
-                    // Log in to Docker Hub and push the image
-                    docker.withRegistry('', DOCKERHUB_CREDENTIALS_ID) {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS_ID) {
                         echo "Pushing image: ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
-                        // Push the image to Docker Hub
                         docker.image("${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}").push()
                     }
                 }
