@@ -23,26 +23,10 @@ pipeline {
             }
         }
 
-        stage('List Docker Images') {
-            steps {
-                script {
-                    sh 'docker images'
-                }
-            }
-        }
-
-        stage('Check Docker Version') {
-            steps {
-                script {
-                    sh 'docker --version'
-                }
-            }
-        }
-
         stage('Push Docker Image to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('', DOCKERHUB_CREDENTIALS_ID) {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS_ID) {
                         echo "Pushing image: ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
                         docker.image("${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}").push()
                     }
